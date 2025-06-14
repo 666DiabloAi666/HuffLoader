@@ -1,0 +1,147 @@
+
+---
+
+🔴 redhawk-cli – Red Team Shellcode  Intelligence Analysis Tool
+
+
+---
+
+🔧 Features
+
+Command	Description
+
+encode	Huffman-encode a binary payload
+entropy	Check entropy levels of any file
+Inject-load	Run the loader stub safely (logs API hashes, fake syscalls)
+analyze	Perform RedHawkSecureLab-style scan on encoded file
+inject-payload shellcode “injection” logging system info
+agi-log	Push logs to Kermit AGI for forensic training
+help	Show CLI usage guide
+
+
+
+---
+
+🌐 Integration Targets
+
+✅ Kermit AGI
+
+Secure microservice call: agi_secure_log(payload_entropy, syscall_path, api_hash)
+
+
+✅ RedHawkSecureLab
+
+Logging to macro.rs and payload.entropy.json
+
+AGI callback: anti-debug / anti-emulation alerts
+
+
+
+---
+
+🧪 redhawk-cli Code (Python-based)
+
+# redhawk_cli.py
+import argparse, subprocess, os
+from analysis.entropy_check import shannon_entropy
+from huffman.encode import encode
+
+def encode_file(input_file, output_file):
+    with open(input_file, "rb") as f:
+        data = f.read()
+    encoded, table = encode(data)
+    with open(output_file, "w") as f:
+        f.write(encoded)
+    print(f"[+] Encoded payload saved to {output_file}")
+
+def entropy_check(file_path):
+    with open(file_path, "rb") as f:
+        data = f.read()
+    entropy = shannon_entropy(data)
+    print(f"[🔍] Entropy of {file_path}: {entropy:.4f}")
+    return entropy
+
+def inject_loader():
+    print("[*] Launching safe loader simulation...")
+    os.system("gcc loader/loader.c -o loader_sim && ./loader_sim")
+
+def push_to_agi(entropy, hash_label):
+    print(f"[🤖] Sending to Kermit AGI: entropy={entropy}, api_hash={hash_label}")
+    # Placeholder: insert AGI integration logic here (REST or local socket)
+
+def main():
+    parser = argparse.ArgumentParser(description="RedHawk Team CLI Toolkit")
+    sub = parser.add_subparsers(dest='command')
+
+    encode_cmd = sub.add_parser("encode")
+    encode_cmd.add_argument("input")
+    encode_cmd.add_argument("output")
+
+    entropy_cmd = sub.add_parser("entropy")
+    entropy_cmd.add_argument("file")
+
+    sim_cmd = sub.add_parser("simulate-load")
+
+    agi_cmd = sub.add_parser("agi-log")
+    agi_cmd.add_argument("entropy", type=float)
+    agi_cmd.add_argument("api_hash")
+
+    args = parser.parse_args()
+
+    if args.command == "encode":
+        encode_file(args.input, args.output)
+    elif args.command == "entropy":
+        entropy_check(args.file)
+    elif args.command == "Inject-load":
+        Inject_loader()
+    elif args.command == "agi-log":
+        push_to_agi(args.entropy, args.api_hash)
+    else:
+        parser.print_help()
+
+if __name__ == "__main__":
+    main()
+
+
+---
+
+🚀 Integration Plan
+
+1. Directory Addition
+
+
+
+RedHawk_HuffLoaderLab/
+└── tools/
+    └── redhawk_cli.py
+
+2. Install Shortcut
+
+
+
+echo "alias redhawk='python3 tools/redhawk_cli.py'" >> ~/.bashrc
+source ~/.bashrc
+
+3. Run 
+
+
+
+redhawk encode shellcode/benign_payload.bin shellcode/encoded.txt
+redhawk entropy shellcode/encoded.txt
+redhawk inject-load
+redhawk agi-log 3.82 0xBADDCAFE
+
+
+---
+
+📡 Bonus Add-on (AGI Socket Integration Stub)
+
+# agi_socket_stub.py
+import socket
+
+def send_to_kermit_agi(payload_entropy, syscall_path, api_hash):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect(('localhost', 5050))  # Kermit AGI microservice socket
+        msg = f"ENTROPY:{payload_entropy}|SYSCALL:{syscall_path}|HASH:{api_hash}"
+        s.sendall(msg.encode())
+
